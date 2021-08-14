@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <meta charset="utf-8" name = "viewport" content = "width = device-width, initial-scale = 1">
+        <title>verify email</title>
+        <script src="main_script.js"></script>
+    </head>
+    <body>
+        <div class="sendotp" style='width: 100%; height: 100%; display: inline-block'>
+            <center>
+                <form id="formemail" name="form" method="POST" onsubmit="return sendOtp();" style="display:block;">
+                    <h1>Verify email</h1>
+                    <input type="email" placeholder="Email address" id="email" name="email" onchange="ValidateEmail(document.form.email)" autofocus required></br><span id="msg" style="color:red"></span></br>
+                    <input type="submit" value="Send otp" id="sendotp" name="sendotp" disabled/>
+                </form>
+                <form id="formotp" name="sendotp" method="POST" onsubmit="return verifyOtp();" style='display: none;'>
+                    <h1>Verify email</h1>
+                    <input type="text" placeholder="Enter otp" id="otp" name="otp" onchange="ValidateOtp(document.sendotp.otp)" autofocus required></br><span id="msg" style="color:red"></span></br>
+                    <input type="submit" value="verify" id="verify" name="verify" disabled/>
+                </form>
+                <p id="message"></p>
+            </center>
+        </div>
+    </body>
+</html>
