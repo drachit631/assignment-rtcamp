@@ -31,7 +31,6 @@
     $comic_url_response = get_header_from_url($comic_url);
     $comic_img = $comic_url_response['img'];
     $comic_title = $comic_url_response['title'];
-    //sendMail(json_encode($recipient),$comic_img,$comic_title);
     function get_header_from_url($url){
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -52,21 +51,22 @@
         }
     }
 
-//------------------------------Getting email address of subscribed users----------------------------------------------------
-    
-    $result = pg_query($conn,'select email from subscription where verified=true');
-    while($row=pg_fetch_assoc($result)){
-        sendMail($row['email'],$comic_img,$comic_title);
+//------------------------------Getting email address of subscribed users---------------------------------------------------- 
+    $statement = mysqli_prepare($conn, "SELECT email FROM subscription WHERE verified=true");
+	mysqli_stmt_execute($statement);
+	mysqli_stmt_bind_result($statement, $result_email);
+    $result = mysqli_stmt_fetch($statement);
+    while($result){
+        sendMail($result_email,$comic_img,$comic_title);
     }
-    pg_close($conn);
+    mysqli_stmt_close($statement);
+    mysqli_close($conn);
 //-----------------------------------Sending mail-----------------------------------------------------------------------
     
     function sendMail($recipient,$img,$title){
-
         $temp = array();
         array_push($temp,array('email' => $recipient));
         $email=json_encode($temp);
-       
     //-----------------------------------Getting attachment id---------------------------------------------
         $curl = curl_init();
         curl_setopt_array($curl, array(

@@ -35,7 +35,7 @@
 
 * **Trustifi** for sending mail securely.
 
-* **Heroku Postgres** for database.
+* **Remote MYSQL** for database.
 
 * **Advanced Scheduler** for Scheduling mails every 5 minitues.
 

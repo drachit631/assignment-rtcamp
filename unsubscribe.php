@@ -3,8 +3,9 @@
     require "config.php";
     if(!empty($_GET['email'])){
         $email = $_GET['email'];
-        $result = pg_prepare($conn,"subscription",'delete from subscription where email=$1');
-        $result = pg_execute($conn,"subscription", array($email));
+        $statement = mysqli_prepare($conn, "DELETE FROM subscription WHERE email= ?");
+		mysqli_stmt_bind_param($statement, "s", $email);
+		$result = mysqli_stmt_execute($statement);
         if($result){
             echo "<center>";
             echo "<h2><b>Now you won't receive any random comics from XKCD</b></h2></br>";
@@ -16,7 +17,8 @@
             echo '<b><a href="https://assignment-rtcamp.herokuapp.com" id="index">Click here for getting Subscription</a></b>';
             echo "</center>";
         }
-        pg_close($conn);
+        mysqli_stmt_close($statement);
+        mysqli_close($conn);
         die();
     }
 //--------------------------------------------------------------------------------------------------------------------------------------------

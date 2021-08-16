@@ -8,14 +8,19 @@
 			http_response_code(403);
 			die();
 		}
-		$res = pg_prepare($conn,"subscription",'select * FROM subscription where email=$1');
-		$res = pg_execute($conn,"subscription", array($email));
-		$row= pg_fetch_assoc($res);
-		if($row['otp']==$otp){
-			$res = pg_prepare($conn,"subscription_update",'UPDATE subscription SET verified= true WHERE email=$1');
-			$res = pg_execute($conn,"subscription_update", array($email));
-			if($res){
-				pg_close($conn);
+		$statement = mysqli_prepare($conn, "SELECT otp FROM subscription WHERE email= ?");
+		mysqli_stmt_bind_param($statement, "s", $email);
+		mysqli_stmt_execute($statement);
+		mysqli_stmt_bind_result($statement, $result_otp);
+    	mysqli_stmt_fetch($statement);
+    	mysqli_stmt_close($statement);
+		if($result_otp == $otp){
+			$statement = mysqli_prepare($conn, "UPDATE subscription SET verified= true WHERE email= ?");
+			mysqli_stmt_bind_param($statement, "s", $email);
+			mysqli_stmt_execute($statement);
+			if(mysqli_stmt_affected_rows($statement) > 0 ){
+				mysqli_stmt_close($statement);
+				mysqli_close($conn);
 				http_response_code(200);
 				exit;
 			}else{

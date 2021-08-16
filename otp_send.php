@@ -9,30 +9,35 @@ if(!empty($_POST['email']))
         http_response_code(403);
         die();
     }
-    $result = pg_prepare($conn,"subscription",'select * FROM subscription where email=$1;');
-    $result = pg_execute($conn,"subscription", array($email));
-    $row=pg_fetch_assoc($result);
-    if($row){
+    $statement = mysqli_prepare($conn, "SELECT email FROM subscription WHERE email= ?");
+	mysqli_stmt_bind_param($statement, "s", $email);
+	mysqli_stmt_execute($statement);
+	mysqli_stmt_bind_result($statement, $result_email);
+    mysqli_stmt_fetch($statement);
+    mysqli_stmt_close($statement);
+    echo "hello0";
+    if (NULL !== $result_email) {
         http_response_code(400);
         die();
     }
     $otp=rand(100000,999999);
-    $assoc_array=[
-        'email'=>$email,
-        'otp'=>$otp,
-        'verified'=> false
-    ];
-    $res = pg_insert($conn,'subscription',$assoc_array); 
-    if($res){
-        $temp = array();
-        array_push($temp,array('email' => $email));
-        sendMail(json_encode($temp),$otp);
+    echo "hello";
+    $statement = mysqli_prepare($conn, "INSERT INTO subscription (email,otp,verified) VALUES ( ?, ?, false)");
+	mysqli_stmt_bind_param($statement, "si", $email, $otp);
+	mysqli_stmt_execute($statement);
+    if (mysqli_stmt_affected_rows($statement) > 0 ) {
+        mysqli_stmt_close($statement);
+        echo "hello1";
+        var_dump(sendMail($email,$otp));
         http_response_code(200);
         exit;
     }
 }
-pg_close($conn);
-function sendMail($email,$otp){
+mysqli_close($conn);
+function sendMail($recipient,$otp){
+    $temp = array();
+    array_push($temp,array('email' => $recipient));
+    $email=json_encode($temp);
     $curl = curl_init();
     $email_body="This is One Time Password for verifing your email address: <b>".$otp."</b>";
     curl_setopt_array($curl, array(
@@ -66,6 +71,7 @@ function sendMail($email,$otp){
     ));
 
     $response = curl_exec($curl);
+    var_dump($response);
     $err = curl_error($curl);
     curl_close($curl);
     if ($err) {
