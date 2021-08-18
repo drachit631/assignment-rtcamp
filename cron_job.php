@@ -1,5 +1,6 @@
 <?php
     require "config.php";
+    require "vendor/autoload.php";
 //-----------------------------------Getting random comic number----------------------------------------------------
     
     $host = "https://xkcd.com/info.0.json";
@@ -58,72 +59,37 @@
     $result = mysqli_stmt_fetch($statement);
     while($result){
         sendMail($result_email,$comic_img,$comic_title);
+        $result = mysqli_stmt_fetch($statement);
     }
     mysqli_stmt_close($statement);
     mysqli_close($conn);
 //-----------------------------------Sending mail-----------------------------------------------------------------------
     
     function sendMail($recipient,$img,$title){
-        $temp = array();
-        array_push($temp,array('email' => $recipient));
-        $email=json_encode($temp);
-    //-----------------------------------Getting attachment id---------------------------------------------
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $_ENV['TRUSTIFI_URL'] . "/api/i/v1/attachment",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => array('file'=> new CURLFILE($img)),
-        CURLOPT_HTTPHEADER => array(
-            'x-trustifi-key:'.$_ENV['TRUSTIFI_KEY'].'',
-            'x-trustifi-secret:'.$_ENV['TRUSTIFI_SECRET'].'',
-        ),
-        ));
-        $attachmentID = curl_exec($curl);
-        curl_close($curl);
-    
-    //-----------------------------------Sending mail of comic to all users-----------------------------------
-        $curl = curl_init();
-        $email_body="<center><b>".$title."</b><br/><img src='".$img."'/><br/><a href='https://assignment-rtcamp.herokuapp.com/unsubscribe.php?email=".$recipient."'>Unsuncsribe from mailing list</a></center>";
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $_ENV['TRUSTIFI_URL'] . "/api/i/v1/email",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS =>'{
-            "recipients": '.$email.',
-            "lists": [],
-            "contacts": [],
-            "attachments": '.$attachmentID.',
-            "title": "xkcd Random comic",
-            "html": "'.$email_body.'",
-            "methods": { 
-            "postmark": false,
-            "secureSend": false,
-            "encryptContent": false,
-            "secureReply": false 
-            }
-        }', 
-            CURLOPT_HTTPHEADER => array(
-                'x-trustifi-key:'.$_ENV['TRUSTIFI_KEY'].'',
-                'x-trustifi-secret:'.$_ENV['TRUSTIFI_SECRET'].'',
-                'Content-Type: application/json'
-            ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        echo $response;  
+        $email_body="<center><b>".$title."</b><br/><img src='".$img."'/><br/><a href='https://assignment-rtcamp.herokuapp.com/unsubscribe.php?email=".$recipient."'>Unsubscribe from mailing list</a></center>";
+        $email = new \SendGrid\Mail\Mail(); 
+        $email->setFrom("hadeskerbecs455@gmail.com", "XKCD");
+        $email->setSubject("XKCD Comic");
+        $email->addTo($recipient, "User");
+        $email->addContent(
+            "text/html", $email_body
+        );
+        $file_encoded = base64_encode(file_get_contents($img));
+        $email->addAttachment(
+            $file_encoded,
+            "image/png",
+            "image.png",
+            "attachment"
+        );
+        $sendgrid = new \SendGrid(getenv('SENDGRID_KEY'));
+        try {
+            $response = $sendgrid->send($email);
+            print $response->statusCode() . "\n";
+            print($response->headers());
+            print $response->body() . "\n";
+        } catch (Exception $e) {
+            echo 'Caught exception: '. $e->getMessage() ."\n";
+        }
         
     }
 //--------------------------------------------------------------------------------------------------------------------------------------------

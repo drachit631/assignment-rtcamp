@@ -16,7 +16,7 @@
 4. Please make sure your emails contain an unsubscribe link so a user can stop getting emails.
  
  ## **Solution to Challenges**
- * For Email verification I have generated **6 digit OTP** which will go as an attachment to Email Verification mail.
+ * For Email verification I have generated **6 digit OTP** which will be provided in Email Verification mail.
 
  * Visited "https://xkcd.com/info.0.json" programatically to return total no. of comics.
 
@@ -33,13 +33,10 @@
 ## **Technology Used**
 * **Heroku** for hosting web application.
 
-* **Trustifi** for sending mail securely.
+* **Sendgrid** for sending random comic email.
 
 * **Remote MYSQL** for database.
 
 * **Advanced Scheduler** for Scheduling mails every 5 minitues.
 
 * **HTML, PHP, Javascript** for building Web Appliaction.
-
-## **Assumptions**
-* **Trustifi** allows only 10 emails.
