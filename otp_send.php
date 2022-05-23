@@ -1,7 +1,6 @@
 <?php 
 //-----------------------------------Send mail for email verification----------------------------------------------------
-require "config.php";
-require "vendor/autoload.php";
+require __DIR__.'/config.php';
 if(!empty($_POST['email']))
 {
     $email= trim($_POST['email']);
@@ -9,7 +8,7 @@ if(!empty($_POST['email']))
         http_response_code(403);
         die();
     }
-    $statement = mysqli_prepare($conn, "SELECT email FROM subscription WHERE email= ?");
+    $statement = mysqli_prepare($conn, 'SELECT email FROM subscription WHERE email= ?');
 	mysqli_stmt_bind_param($statement, "s", $email);
 	mysqli_stmt_execute($statement);
 	mysqli_stmt_bind_result($statement, $result_email);
@@ -20,7 +19,7 @@ if(!empty($_POST['email']))
         die();
     }
     $otp=rand(100000,999999);
-    $statement = mysqli_prepare($conn, "INSERT INTO subscription (email,otp,verified) VALUES ( ?, ?, false)");
+    $statement = mysqli_prepare($conn, 'INSERT INTO subscription (email,otp,verified) VALUES ( ?, ?, false)');
 	mysqli_stmt_bind_param($statement, "si", $email, $otp);
 	mysqli_stmt_execute($statement);
     if (mysqli_stmt_affected_rows($statement) > 0 ) {
@@ -32,23 +31,29 @@ if(!empty($_POST['email']))
 }
 mysqli_close($conn);
 function sendMail($recipient,$otp){
+    $url = 'https://api.sendgrid.com/';
+    $sendgrid_apikey = getenv("SENDGRID_KEY");
     $email_body="This is One Time Password for verifing your email address: <b>".$otp."</b>";
-    $email = new \SendGrid\Mail\Mail(); 
-    $email->setFrom("hadeskerbecs455@gmail.com", "XKCD");
-    $email->setSubject("OTP for XKCD verification");
-    $email->addTo($recipient, "User");
-    $email->addContent(
-        "text/html", $email_body
+    $params = array(
+        'to'        => $recipient,
+        'toname'	=> 'User',
+        'subject'   => 'OTP for XKCD verification',
+        'html'      => $email_body,
+        'from'      => getenv("FROM"),
+        'fromname'	=> 'XKCD'
     );
-    $sendgrid = new \SendGrid(getenv('SENDGRID_KEY'));
-    try {
-        $response = $sendgrid->send($email);
-        print $response->statusCode() . "\n";
-        print($response->headers());
-        print $response->body() . "\n";
-    } catch (Exception $e) {
-        echo 'Caught exception: '. $e->getMessage() ."\n";
-    }
+    print_r($params);
+    $request =  $url.'api/mail.send.json';
+
+    $session = curl_init($request);
+    curl_setopt($session, CURLOPT_HTTPHEADER, array('Authorization: Bearer ' . $sendgrid_apikey));
+    curl_setopt ($session, CURLOPT_POST, true);
+    curl_setopt ($session, CURLOPT_POSTFIELDS, $params);
+    curl_setopt($session, CURLOPT_HEADER, false);
+    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($session);
+    curl_close($session);
+    print_r($response);       
 }          
 //------------------------------------------------------------------------------------------------------------------
 ?>

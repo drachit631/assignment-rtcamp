@@ -20,7 +20,7 @@
 
  * Visited "https://xkcd.com/info.0.json" programatically to return total no. of comics.
 
- * Genarated random comic as bellow: 
+ * Generated random comic as below: 
 
     >$random_comic = rand(1,$response['num']);
 
